@@ -247,15 +247,15 @@ var core = exports.core = {
         return 0;
     },
 
-    shop: function (showDisplay) {
+    tienda: function (showDisplay) {
         var shop = [
-            ['Symbol', 'Buys a custom symbol to go infront of name and puts you at top of userlist. (Temporary until restart, certain symbols are blocked)', 5],
-            ['Fix', 'Buys the ability to alter your current custom avatar or trainer card. (don\'t buy if you have neither)', 10],
-            ['Poof', 'Buy a poof message to be added into the pool of possible poofs.', 15],
-            ['Who', 'Buys a custom whois bot message for your name.', 25],
-            ['Avatar', 'Buys an custom avatar to be applied to your name (You supply. Images larger than 80x80 may not show correctly)', 30],
-            ['Trainer', 'Buys a trainer card which shows information through a command.', 50],
-            ['Room', 'Buys a chatroom for you to own. (within reason, can be refused)', 100]
+            ['Simbolo', 'Compra un símbolo personalizado para ir delante del nombre y lo pone en la parte superior de la lista de usuarios. (Temporal hasta el reinicio, ciertos símbolos están bloqueados)', 5],
+            ['Arreglar', 'Compra la capacidad de cambiar su avatar o la tarjeta de entrenador. (No comprar si no lo tiene)"', 10],
+            ['Poof', 'Comprar un mensaje poof que se añade a la piscina de posibles poof.', 15],
+            ['Quién', 'Buys un mensaje bot personalizados whois para su nombre.', 25],
+            ['Avatar', 'Compra un avatar personalizado que se aplicará a su nombre (usted provee. Imágenes más grande que 80x80 no pueden mostrar correctamente)', 30],
+            ['Tarjeta de Entrenador', 'Compra una tarjeta de entrenador que muestra información a través de un comando.', 50],
+            ['Sala', 'Compra una sala de chat para que usted posee. (dentro de lo razonable, puede ser rechazado)', 100]
         ];
 
         if (showDisplay === false) {
@@ -268,7 +268,7 @@ var core = exports.core = {
             s = s + '<tr><td>' + shop[start][0] + '</td><td>' + shop[start][1] + '</td><td>' + shop[start][2] + '</td></tr>';
             start++;
         }
-        s += '</tbody></table><center>To buy an item from the shop, use /buy <em>command</em>.</center>';
+        s += '</tbody></table><center>Para comprar un artículo de la tienda, uso /buy <em>command</em>.</center>';
         return s;
     },
 
@@ -319,22 +319,58 @@ var core = exports.core = {
     },
 
     emoticons: {
-        'Kappa': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-ddc6e3a8732cb50f-25x28.png',
+        'Kappa': 'http://static-cdn.jtvnw.net/jtv_user_pictures/emoticon-2867-src-f02f9d40f66f0840-28x28.png',
         'PogChamp': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-60aa1af305e32d49-23x30.png',
         'BloodTrail': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-f124d3a96eff228a-41x28.png',
         'BibleThump': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-f6c13c7fc0a5c93d-36x30.png',
         'feelsgd': 'http://i.imgur.com/9gj1oPV.png',
         'feelsbd': 'http://i.imgur.com/Ehfkalz.gif',
+        ':(': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0101-sadsmile.gif',
+        ':)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0100-smile.gif',
+        ';(': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0106-crying.gif',
+        ';)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0105-wink.gif',
+        ':$': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0111-blush.gif',
+        ':D': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0102-bigsmile.gif',
+        ':*': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0109-kiss.gif',
+        ':P': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0110-tongueout.gif',
+        ':}': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0116-evilgrin.gif',
+        '(swear)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0183-swear.gif',
+        'hbang': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0179-headbang.gif',
+        '(drunk)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0175-drunk.gif',
+        '(tmi)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0184-tmi.gif',
+        '(dance)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0169-dance.gif',
+        'rofl': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0140-rofl.gif',
+        ':?': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0138-thinking.gif',
+        ':@': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0121-angry.gif',
+        '(party)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0123-party.gif',
+        ':S': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0124-worried.gif',
+        '(call)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0129-call.gif',
+        '(devil)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0130-devil.gif',
+        '(angel)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0131-angel.gif',
+        '(inlove)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0115-inlove.gif',
+        '(y)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0148-yes.gif',
+        '(n)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0149-no.gif',
+        '(heart)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0152-heart.gif',
+        '(bheart)': 'http://factoryjoe.s3.amazonaws.com/emoticons/emoticon-0153-brokenheart.gif',
+        'pjsalt': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-18be1a297459453f-36x30.png',
+        '(admin)': 'http://emoticoner.com/files/emoticons/smiley_faces/admin-power-smiley-face.gif?1302011301',
+        '(give)': 'http://emoticoner.com/files/emoticons/smiley_faces/giveup-smiley-face.gif?1302011371',
+        '(dog)': 'http://emoticoner.com/files/emoticons/smiley_faces/dog-smiley-face.gif?1302011344',
+        'dotdot': 'http://emoticoner.com/files/emoticons/smiley_faces/dots-smiley-face.gif?1302011345',
+        'ban?': 'http://emoticoner.com/files/emoticons/smiley_faces/ban-smiley-face.gif?1302011308',
+        '(banned2)': 'http://emoticoner.com/files/emoticons/smiley_faces/banned-smiley-face.gif?1302011310',
+        '(banned)': 'http://emoticoner.com/files/emoticons/smiley_faces/banned2-smiley-face.gif?1302011310',
+        '(ho)': 'http://emoticoner.com/files/emoticons/skype_smileys/makeup-skype-smiley.gif?1301953196',
+        '(hi)': 'http://emoticoner.com/files/emoticons/skype_smileys/hi-skype-smiley.gif?1301953195',
+        'B)': 'http://emoticoner.com/files/emoticons/skype_smileys/cool-skype-smiley.gif?1301953192',
+        '(clap)': 'http://emoticoner.com/files/emoticons/skype_smileys/clapping-skype-smiley.gif?1301953192',
+        '(hump)': 'http://emoticoner.com/files/emoticons/smiley_faces/boff-smiley-face.gif?1302011321',
+        '(banned1)': 'http://emoticoner.com/files/emoticons/smileys/banned1-smiley.gif?1292867552',
         'crtNova': 'http://static-cdn.jtvnw.net/jtv_user_pictures/emoticon-3227-src-77d12eca2603dde0-28x28.png',
         'crtSSoH': 'http://static-cdn.jtvnw.net/jtv_user_pictures/emoticon-3228-src-d4b613767d7259c4-28x28.png',
         'SSSsss': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-5d019b356bd38360-24x24.png',
         'SwiftRage': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-680b6b3887ef0d17-21x28.png',
-        'ResidentSleeper': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-1ddcc54d77fc4a61-28x28.png',
-        'PJSalt': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-18be1a297459453f-36x30.png',
-        'FailFish': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-c8a77ec0c49976d3-22x30.png',
-        '4Head': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-76292ac622b0fc38-20x30.png',
-        'DansGame': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-ce52b18fccf73b29-25x32.png',
-        'Kreygasm': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-3a624954918104fe-19x27.png'
+        'ResidentSleeper': 'http://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-1ddcc54d77fc4a61-28x28.png'
     },
 
     processEmoticons: function (text) {
@@ -390,7 +426,7 @@ var core = exports.core = {
 
 exports.sysopAccess = function () {
 
-    var systemOperators = ['creaturephil'];
+    var systemOperators = ['theshattered'];
 
     Users.User.prototype.hasSysopAccess = function () {
         if (systemOperators.indexOf(this.userid) > -1 && this.authenticated) {
