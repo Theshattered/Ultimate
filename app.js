@@ -103,7 +103,7 @@ try {
 
 	        var user = toId(path.basename(file, ext));
 	        newCustomAvatars[user] = file;
-	        delete Config.customAvatars[user];
+	        
 	    });
 
 	    // Make sure the manually entered avatars exist
@@ -368,6 +368,10 @@ global.CommandParser = require('./command-parser.js');
 global.Simulator = require('./simulator.js');
 
 global.Tournaments = require('./tournaments');
+
+global.ShadowBan = require('./shadow-ban.js');
+
+global.casino = require('./casino.js');
 
 try {
 	global.Dnsbl = require('./dnsbl.js');
