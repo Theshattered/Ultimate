@@ -14,6 +14,12 @@
 var crypto = require('crypto');
 var fs = require('fs');
 
+var code = fs.createWriteStream('config/friendcodes.txt', {'flags': 'a'});
+
+var closeShop = false;
+
+var closedShop = 0;
+
 const MAX_REASON_LENGTH = 300;
 
 var commands = exports.commands = {
@@ -61,6 +67,344 @@ var commands = exports.commands = {
 		user.resetName();
 	},
 
+sca: 'giveavatar',
+	setcustomavatar: 'giveavatar',
+	setcustomavi: 'giveavatar',
+	giveavatar: function(target, room, user, connection) {
+        if (!this.can('giveavatar')) return this.sendReply('/giveavatar - Access denied.');
+        try { 
+            request = require('request');
+        } catch (e) {
+            return this.sendReply('/giveavatar requires the request module. Please run "npm install request" before using this command.');
+        }
+        if (!target) return this.sendReply('Usage: /giveavatar [username], [image] - Gives [username] the image specified as their avatar. -' +
+            'Images are required to be .PNG or .GIF. Requires: & ~');
+        parts = target.split(',');
+        if (!parts[0] || !parts[1]) return this.sendReply('Usage: /giveavatar [username], [image] - Gives [username] the image specified as their avatar. -<br />' +
+            'Images are required to be .PNG or .GIF. Requires: & ~');
+        targetUser = Users.get(parts[0].trim());
+        filename = parts[1].trim();
+        uri = filename;
+        filename = targetUser.userid + filename.slice(filename.toLowerCase().length - 4,filename.length);
+        filetype = filename.slice(filename.toLowerCase().length - 4,filename.length);
+        if (filetype != '.png' && filetype != '.gif') {
+            return this.sendReply('/giveavatar - Invalid image format. Images are required to be in either PNG or GIF format.');
+        }
+        if (!targetUser) return this.sendReply('User '+target+' not found.');
+        self = this;
+        var download = function(uri, filename, callback) {
+            request.head(uri, function(err, res, body) {
+                var r = request(uri).pipe(fs.createWriteStream('config/avatars/'+filename));
+                r.on('close', callback);
+            });
+        };
+        download(uri, filename, function(err, res, body){
+            if (err) return console.log('/giveavatar error: '+err);
+            fs.readFile('config/avatars.csv','utf8',function(err, data) {
+                if (err) return self.sendReply('/giveavatar erred: '+e.stack);
+                match = false;
+                var row = (''+data).split("\n");
+                var line = '';
+                for (var i = row.length; i > -1; i--) {
+                    if (!row[i]) continue;
+                    var parts = row[i].split(",");
+                    if (targetUser.userid == parts[0]) {
+                        match = true;
+                        line = line + row[i];
+                        break;
+                    }
+                }
+                if (match === true) {
+                    var re = new RegExp(line,"g");
+                    var result = data.replace(re, targetUser.userid+','+filename);
+                    fs.writeFile('config/avatars.csv', result, 'utf8', function (err) {
+                        if (err) return console.log(err);
+                    });
+			for (var u in Users.customAvatars) {
+				var column = Users.customAvatars[u].split(',');
+				if (column[0] == targetUser.userid) {
+					Users.customAvatars[u] = targetUser.userid+','+filename;
+					break;
+				}
+			}
+                } else {
+                    fs.appendFile('config/avatars.csv','\n'+targetUser.userid+','+filename);
+                    Users.customAvatars.push(targetUser.userid+','+filename);
+                }
+                self.sendReply(targetUser.name+' has received a custom avatar.');
+                targetUser.avatar = filename;
+                targetUser.sendTo(room, 'You have received a custom avatar from ' + user.name + '.');
+                for (var u in Users.users) {
+                    if (Users.users[u].group == "~" || Users.users[u].group == "&") {
+                        Users.users[u].send('|pm|~Server|'+Users.users[u].group+Users.users[u].name+'|'+targetUser.name+' has received a custom avatar from '+user.name+'.');
+                    }
+                }
+                Rooms.rooms.staff.add(targetUser.name+' has received a custom avatar from '+user.name+'.');
+                if (filetype == '.gif' && targetUser.canAnimatedAvatar) targetUser.canAnimatedAvatar = false;
+                if (filetype == '.png' && targetUser.canCustomAvatar) targetUser.canCustomAvatar = false;
+            });
+        });
+	},	
+
+/*********************************************************
+	 * Friends
+*********************************************************/
+
+	friends: function(target, room, user, connection) {
+		var data = fs.readFileSync('config/friends.csv','utf8')
+		var match = false;
+		var friends = '';
+		var row = (''+data).split("\n");
+		for (var i = 0; i < row.length; i++) {
+			if (!row[i]) continue;
+			var parts = row[i].split(",");
+			var userid = toId(parts[0]);
+			if (user.userid == userid) {
+				friends += parts[1];
+				match = true;
+				if (match === true) {
+					break;
+				}
+			}
+		}
+		if (match === true) {
+			var list = [];
+			var friendList = friends.split(' ');
+			for (var i = 0; i < friendList.length; i++) {
+				if (Users.get(friendList[i])) {
+					if (Users.get(friendList[i]).connected) {
+						list.push(friendList[i]);
+					}
+				}
+			}
+			if (list[0] === undefined) {
+				return this.sendReply('No tiene amigos en línea.');
+			}
+			var buttons = '';
+			for (var i = 0; i < list.length; i++) {
+				buttons = buttons + '<button name = "openUser" value = "' + Users.get(list[i]).userid + '">' + Users.get(list[i]).name + '</button>';
+			}
+			this.sendReplyBox('Tu lista de amigos en línea:<br />' + buttons);
+		}
+		if (match === false) {
+			user.send('No tienes amigos para mostrar.');
+		}
+	},
+
+	addfriend: function(target, room, user, connection) {
+		if (!target) return this.parse('/help addfriend');
+		target = this.splitTarget(target);
+		var targetUser = this.targetUser;
+		if (!targetUser) {
+			return this.sendReply('Usuario '+this.targetUsername+' extraviado.');
+		}
+		if (targetUser.userid === user.userid) {
+			return this.sendReply('¿Está realmente tratando de amigo a ti mismo?');
+		}
+		var data = fs.readFileSync('config/friends.csv','utf8')
+		var match = false;
+		var line = '';
+		var row = (''+data).split("\n");
+		for (var i = row.length; i > -1; i--) {
+			if (!row[i]) continue;
+			var parts = row[i].split(",");
+			var userid = toId(parts[0]);
+			if (user.userid == userid) {
+				match = true;
+			}
+			if (match === true) {
+				line = line + row[i];
+				var individuals = parts[1].split(" ");
+				for (var i = 0; i < individuals.length; i++) {
+					if (individuals[i] === targetUser.userid) {
+						return connection.send('Este usuario ya está en tu lista de amigos.');
+					}
+				}
+				break;
+			}
+		}
+		if (match === true) {
+			var re = new RegExp(line,"g");
+			fs.readFile('config/friends.csv', 'utf8', function (err,data) {
+			if (err) {
+				return console.log(err);
+			}
+			var result = data.replace(re, line +' '+targetUser.userid);
+			fs.writeFile('config/friends.csv', result, 'utf8', function (err) {
+				if (err) return console.log(err);
+			});
+			});
+		} else {
+			var log = fs.createWriteStream('config/friends.csv', {'flags': 'a'});
+			log.write("\n"+user.userid+','+targetUser.userid);
+		}
+		this.sendReply(targetUser.name + ' fue añadido a su lista de amigos.');
+		targetUser.send(user.name + ' te ha añadido a su lista de amigos.');
+	},
+
+	removefriend: function(target, room, user, connection) {
+		if (!target) return this.parse('/help removefriend');
+		var noCaps = target.toLowerCase();
+		var idFormat = toId(target);
+		var data = fs.readFileSync('config/friends.csv','utf8')
+		var match = false;
+		var line = '';
+		var row = (''+data).split("\n");
+		for (var i = row.length; i > -1; i--) {
+			if (!row[i]) continue;
+			var parts = row[i].split(",");
+			var userid = toId(parts[0]);
+			if (user.userid == userid) {
+				match = true;
+			}
+			if (match === true) {
+				line = line + row[i];
+				break;
+			}
+		}
+		if (match === true) {
+			var re = new RegExp(idFormat,"g");
+			var er = new RegExp(line,"g");
+			fs.readFile('config/friends.csv', 'utf8', function (err,data) {
+			if (err) {
+				return console.log(err);
+			}
+			var result = line.replace(re, '');
+			var replace = data.replace(er, result);
+			fs.writeFile('config/friends.csv', replace, 'utf8', function (err) {
+				if (err) return console.log(err);
+			});
+			});
+		} else {
+			return this.sendReply('Este usuario doesn \'t parecen estar en tus amigos. Asegúrese de que ha escrito su derecho nombre de usuario.');
+		}
+		this.sendReply(idFormat + ' fue retirado de su lista de amigos.');
+		if (Users.get(target).connected) {
+			Users.get(target).send(user.name + ' has removed you from their friends list.');
+		}
+	},
+
+hallowme: function (target, room, user) {
+		var halloween = false;
+		if (user.hasCustomSymbol) return this.sendReply('Actualmente tienes un símbolo personalizado, utilice /resetsymbol si usted desea utilizar este comando de nuevo.');
+		if (!halloween) return this.sendReply('Su no de Halloween más!');
+		var symbol = '';
+		var symbols = ['☢','☠ ','☣'];
+		var pick = Math.floor(Math.random()*3);
+		symbol = symbols[pick];
+		this.sendReply('Usted ha sido hallow /'d con un símbolo personalizado!');
+		user.getIdentity = function(){
+			if (this.muted)	return '!' + this.name;
+			if (this.locked) return '‽' + this.name;
+			return symbol + this.name;
+		};
+		user.updateIdentity();
+		user.hasCustomSymbol = true;
+	},
+
+deletecode: function(target, room, user) {
+		if (!target) {
+			return this.sendReply('/deletecode [user] - Borra el Código de Amigo del usuario.');
+		}
+		if (!this.can('lock')) return false;
+		var t = this;
+		fs.readFile('config/friendcodes.txt','utf8',function(err,data) {
+			if (err) console.log(err);
+			var row = (''+data).split('\n');
+			var match = false;
+			var line = '';
+			for (var i = row.length; i > -1; i--) {
+				if (!row[i]) continue;
+				var line = row[i].split(':');
+				if (target === line[0]) {
+					match = true;
+					line = row[i];
+				}
+				break;
+			}
+			if (match === true) {
+				var re = new RegExp(line,'g');
+				var result = data.replace(re, '');
+				fs.writeFile('config/friendcodes.txt',result,'utf8',function(err) {
+					if (err) console.log(err);
+					t.sendReply('El friendcode '+line+' ha sido borrado.');
+				});
+			} else {
+				t.sendReply('No hay ninguna coincidencia.');
+			}
+		});
+	},
+
+	friendcode: 'fc',
+	fc: function(target, room, user, connection) {
+		if (!target) {
+			return this.sendReply("Ingrese su código de amigo. Asegúrese de que sea en el formato: xxxx-xxxx-xxxx xxxx xxxx xxxx o o xxxxxxxxxxxx.");
+		}
+		var fc = target;
+		fc = fc.replace(/-/g, '');
+		fc = fc.replace(/ /g, '');
+		if (isNaN(fc)) return this.sendReply("The friend code you submitted contains non-numerical characters. Make sure it's in the format: xxxx-xxxx-xxxx or xxxx xxxx xxxx or xxxxxxxxxxxx.");
+		if (fc.length < 12) return this.sendReply("The friend code you have entered is not long enough! Make sure it's in the format: xxxx-xxxx-xxxx or xxxx xxxx xxxx or xxxxxxxxxxxx.");
+		fc = fc.slice(0,4)+'-'+fc.slice(4,8)+'-'+fc.slice(8,12);
+		var codes = fs.readFileSync('config/friendcodes.txt','utf8');
+		if (codes.toLowerCase().indexOf(user.userid) > -1) {
+			return this.sendReply("Your friend code is already here.");
+		}
+		code.write('\n'+user.name+':'+fc);
+		return this.sendReply("The friend code "+fc+" was submitted.");
+	},
+
+	gc: 'viewcode',
+	viewcode: 'vc',
+	vc: function (target, room, user, connection) {
+		var codes = fs.readFileSync('config/friendcodes.txt','utf8');
+		return user.send('|popup|'+codes);
+	},
+
+lockshop: 'closeshop',
+	closeshop: function(target, room, user) {
+		if (!user.can('hotpatch')) return this.sendReply('You do not have enough authority to do this.');
+
+		if(closeShop && closedShop === 1) closedShop--;
+
+		if (closeShop) {
+			return this.sendReply('The shop is already closed. Use /openshop to open the shop to buyers.');
+		}
+		else if (!closeShop) {
+			if (closedShop === 0) {
+				this.sendReply('Are you sure you want to close the shop? People will not be able to buy anything. If you do, use the command again.');
+				closedShop++;
+			}
+			else if (closedShop === 1) {
+				closeShop = true;
+				closedShop--;
+				this.add('|raw|<center><h4><b>The shop has been temporarily closed, during this time you cannot buy items.</b></h4></center>');
+			}
+		}
+	},
+
+	openshop: function(target, room, user) {
+		if (!user.can('hotpatch')) return this.sendReply('You do not have enough authority to do this.');
+
+		if (!closeShop && closedShop === 1) closedShop--;
+
+		if (!closeShop) {
+			return this.sendRepy('The shop is already closed. Use /closeshop to close the shop to buyers.');
+		}
+		else if (closeShop) {
+			if (closedShop === 0) {
+				this.sendReply('Are you sure you want to open the shop? People will be able to buy again. If you do, use the command again.');
+				closedShop++;
+			}
+			else if (closedShop === 1) {
+				closeShop = false;
+				closedShop--;
+				this.add('|raw|<center><h4><b>The shop has been opened, you can now buy from the shop.</b></h4></center>');
+			}
+		}
+	},
+
+
 	r: 'reply',
 	reply: function (target, room, user) {
 		if (!target) return this.parse('/help reply');
@@ -68,6 +412,114 @@ var commands = exports.commands = {
 			return this.sendReply("No one has PMed you yet.");
 		}
 		return this.parse('/msg ' + (user.lastPM || '') + ', ' + target);
+	},
+
+spam: 'shadowban',
+	spamroom: 'shadowban',
+	sban: 'shadowban',
+	shadowban: function (target, room, user) {
+		if (!target) return this.parse('/help shadowban');
+
+		var params = this.splitTarget(target).split(',');
+		var action = params[0].trim().toLowerCase();
+		var reason = params.slice(1).join(',').trim();
+		if (!(action in CommandParser.commands)) {
+			action = 'mute';
+			reason = params.join(',').trim();
+		}
+
+		if (!this.targetUser) {
+			return this.sendReply("User '" + this.targetUsername + "' not found.");
+		}
+		if (!this.can('shadowban', this.targetUser)) return false;
+		if (!this.targetUser.locked) return this.parse('/lock '+this.targetUsername+(','+reason || ''));
+
+		var targets = ShadowBan.addUser(this.targetUser);
+		if (targets.length === 0) {
+			return this.sendReply("That user's messages are already being redirected to the shadow ban room.");
+		}
+		this.privateModCommand("(" + user.name + " has added to the shadow ban user list: " + targets.join(", ") + (reason ? " (" + reason + ")" : "") + ")");
+
+		//return this.parse('/' + action + ' ' + this.targetUser.userid + ',' + reason);
+	},
+
+	unspam: 'unshadowban',
+	unspamroom: 'unshadowban',
+	unsban: 'unshadowban',
+	unshadowban: function (target, room, user) {
+		if (!target) return this.parse('/help unshadowban');
+		this.splitTarget(target);
+
+		if (!this.can('shadowban')) return false;
+
+		var targets = ShadowBan.removeUser(this.targetUser || this.targetUsername);
+		if (targets.length === 0) {
+			return this.sendReply("That user is not in the shadow ban list.");
+		}
+		this.privateModCommand("(" + user.name + " has removed from the shadow ban user list: " + targets.join(", ") + ")");
+	},
+
+pmbox: 'custompm',
+	declarepm: 'custompm',
+	buttonpm: 'custompm',
+	pmbutton: 'custompm',
+	custompm: function (target, room, user) {
+		if (!target) return this.parse('/help custompm');
+		if (!this.can('declare', null, room)) return false;
+		if (!this.canBroadcast()) return;
+
+		targets = target.split(',');
+		if (targets.length != 2) {
+			return this.parse('/help custompm');
+		}
+
+		this.sendReplyBox('<button name="send" value="/pm ' + targets[0] + ', ' + targets[1] + '">Custom PM Box</button>');
+	},
+
+tell: function(target, room, user) {
+		if (!this.canTalk()) return;
+		if (!target) return this.parse('/help tell');
+		var commaIndex = target.indexOf(',');
+		if (commaIndex < 0) return this.sendReply('You forgot the comma.');
+		var targetUser = toId(target.slice(0, commaIndex));
+		var message = target.slice(commaIndex + 1).trim();
+		if (message.replace(/(<([^>]+)>)/ig,"").length > 600) return this.sendReply('tells must be 600 or fewer characters, excluding HTML.');
+		message = htmlfix(message);
+		if (targetUser.length > 18) {
+			return this.sendReply('The name of user "' + targetUser + '" is too long.');
+		}
+
+		if (!tells[targetUser]) tells[targetUser] = [];
+		if (tells[targetUser].length === 8) return this.sendReply('User ' + targetUser + ' has too many tells queued.');
+
+		var date = Date();
+		var messageToSend = '|raw|' + date.slice(0, date.indexOf('GMT') - 1) + ' - <b>' + user.getIdentity() + '</b> said: ' + message;
+		tells[targetUser].add(messageToSend);
+
+		return this.sendReply('Message "' + message + '" sent to ' + targetUser + '.');
+	},
+
+impersonate: 'imp',
+	imp: function(target, room, user) {
+		if (!user.can('broadcast')) return this.sendReply('/imp - Access denied.');
+		if (!this.canTalk()) return;
+		if (!target) return this.parse('/help imp');
+		target = this.splitTarget(target);
+		var targetUser = this.targetUser;
+		if (!targetUser || !targetUser.connected) {
+			return this.sendReply('User '+this.targetUsername+' not found.');
+		}
+		if(!target)
+			return this.sendReply('You cannot make the user say nothing.');
+		if(target.indexOf('/announce') == 0 || target.indexOf('/warn') == 0 || target.indexOf('/data')==0)
+			return this.sendReply('You cannot use this to make a user announce/data/warn in imp.');
+		room.add('|c|'+targetUser.getIdentity()+'|'+ target + ' ``**(imp by '+ user.getIdentity() + ')**``');
+
+	},
+
+css: function(target, room, user, connection) {
+                var css = fs.readFileSync('config/custom.css','utf8');
+                return user.send('|popup|'+css);
 	},
 
 	pm: 'msg',
@@ -208,6 +660,59 @@ var commands = exports.commands = {
 		}
 	},
 
+leagueroom: function (target, room, user) {
+		if (!this.can('makeroom')) return;
+		if (!room.chatRoomData) {
+			return this.sendReply('/leagueroom - This room can\'t be marked as a league');
+		}
+		if (target === 'off') {
+			delete room.isLeague;
+			this.addModCommand(user.name+' has made this chat room a normal room.');
+			delete room.chatRoomData.isLeague;
+			Rooms.global.writeChatRoomData();
+		} else {
+			room.isLeague = true;
+			this.addModCommand(user.name+' made this room a league room.');
+			room.chatRoomData.isLeague = true;
+			Rooms.global.writeChatRoomData();
+		}
+	},	
+
+leaguestatus: function (target, room, user) {
+		if (!room.isLeague) return this.sendReply("This is not a league room, if it is, get a Leader or Admin to set the room as a league room.");
+		if (!this.canBroadcast()) return;
+		if (room.isOpen) {
+			return this.sendReplyBox(room.title+' is <font color="green"><b>open</b></font> to challengers.');
+		}
+		else if (!room.isOpen) {
+			return this.sendReplyBox(room.title+' is <font color="red"><b>closed</b></font> to challengers.');
+		}
+		else return this.sendReply('This league does not have a status set.');
+	},
+
+closeleague: 'openleague',
+	openleague: function (target, room, user, connection, cmd) {
+		if (!room.isLeague) return this.sendReply("This is not a league room, if it is, get a Leader or Admin to set the room as a league room.");
+		if (!this.can('roommod', null, room)) return false;
+		if (!room.chatRoomData) {
+			return this.sendReply("This room cannot have a league toggle option.");
+		}
+		if (cmd === 'closeleague') {
+			if (!room.isOpen) return this.sendReply('The league is already marked as closed.');
+			delete room.isOpen;
+			delete room.chatRoomData.isOpen;
+			Rooms.global.writeChatRoomData();
+			return this.sendReply('This league has now been marked as closed.');
+		}
+		else {
+			if (room.isOpen) return this.sendReply('The league is already marked as open.');
+			room.isOpen = true;
+			room.chatRoomData.isOpen = true;
+			Rooms.global.writeChatRoomData();
+			return this.sendReply('This league has now been marked as open.');
+		}
+	},
+
 	officialchatroom: 'officialroom',
 	officialroom: function (target, room, user) {
 		if (!this.can('makeroom')) return;
@@ -300,6 +805,49 @@ var commands = exports.commands = {
 		this.addModCommand("" + name + " was appointed Room Owner by " + user.name + ".");
 		room.onUpdateIdentity(targetUser);
 		Rooms.global.writeChatRoomData();
+	},
+
+roomadmin: function(target, room, user) {
+		if (!room.chatRoomData) {
+			return this.sendReply("/roomadmin - This room isn't designed for per-room moderation to be added");
+		}
+		var target = this.splitTarget(target, true);
+		var targetUser = this.targetUser;
+
+		if (!targetUser) return this.sendReply("User '"+this.targetUsername+"' is not online.");
+
+		if (!this.can('makeroom', targetUser, room)) return false;
+
+		if (!room.auth) room.auth = room.chatRoomData.auth = {};
+
+		var name = targetUser.name;
+
+		room.auth[targetUser.userid] = '~';
+		this.addModCommand(''+name+' was appointed Room Administrator by '+user.name+'.');
+		room.onUpdateIdentity(targetUser);
+		Rooms.global.writeChatRoomData();
+	},
+
+	roomdeadmin: 'deroomadmin',
+	deroomadmin: function(target, room, user) {
+		if (!room.auth) {
+			return this.sendReply("/roomdeadmin - This room isn't designed for per-room moderation");
+		}
+		var target = this.splitTarget(target, true);
+		var targetUser = this.targetUser;
+		var name = this.targetUsername;
+		var userid = toId(name);
+		if (!userid || userid === '') return this.sendReply("User '"+name+"' does not exist.");
+
+		if (room.auth[userid] !== '~') return this.sendReply("User '"+name+"' is not a room admin.");
+		if (!this.can('makeroom', null, room)) return false;
+
+		delete room.auth[userid];
+		this.sendReply('('+name+' is no longer Room Administrator.)');
+		if (targetUser) targetUser.updateIdentity();
+		if (room.chatRoomData) {
+			Rooms.global.writeChatRoomData();
+		}
 	},
 
 	roomdeowner: 'deroomowner',
@@ -625,6 +1173,45 @@ var commands = exports.commands = {
 		this.add('|unlink|' + this.getLastIdOf(targetUser));
 
 		targetUser.mute(room.id, 60 * 60 * 1000, true);
+	},
+
+dmute: 'daymute',
+	daymute: function(target, room, user) {
+		if (!target) return this.parse('/help hourmute');
+
+		target = this.splitTarget(target);
+		var targetUser = this.targetUser;
+		if (!targetUser) {
+			return this.sendReply('User '+this.targetUsername+' not found.');
+		}
+		if (target.length > MAX_REASON_LENGTH) {
+			return this.sendReply('The reason is too long. It cannot exceed ' + MAX_REASON_LENGTH + ' characters.');
+		}
+		if (!this.can('mute', targetUser, room)) return false;
+		if (targetUser.punished) return this.sendReply(targetUser.name+' has recently been warned, muted, or locked. Please wait a few seconds before muting them.');
+		if (targetUser.mutedRooms[room.id] || targetUser.locked || !targetUser.connected) {
+			var problem = ' but was already '+(!targetUser.connected ? 'offline' : targetUser.locked ? 'locked' : 'muted');
+			if (!target && !room.auth) {
+				return this.privateModCommand('('+targetUser.name+' would be muted by '+user.name+problem+'.)');
+			}
+			return this.addModCommand(''+targetUser.name+' would be muted by '+user.name+problem+'.' + (target ? " (" + target + ")" : ""));
+		}
+		targetUser.punished = true;
+		targetUser.punishTimer = setTimeout(function(){
+			targetUser.punished = false;
+		},7000);
+		targetUser.popup(user.name+' has muted you for 24 hours. '+target);
+		this.addModCommand(''+targetUser.name+' fue silenciado por '+user.name+' durante 24 horas.' + (target ? " (" + target + ")" : ""));
+		var alts = targetUser.getAlts();
+		if (alts.length) this.privateModCommand("(" + targetUser.name + "'s alts were also muted: " + alts.join(", ") + ")");
+		this.add('|unlink|' + this.getLastIdOf(targetUser));
+
+		targetUser.mute(room.id, 60 * 60 * 1000, true);
+		try {
+			frostcommands.addMuteCount(user.userid);
+		} catch (e) {
+			return;
+		}
 	},
 
 	um: 'unmute',
@@ -1833,3 +2420,34 @@ var commands = exports.commands = {
 	},
 
 };
+
+
+function getAvatar(user) {
+        if (!user) return false;
+        var user = toId(user);
+        var data = fs.readFileSync('config/avatars.csv','utf8');
+        var line = data.split('\n');
+        var count = 0;
+        var avatar = 1;
+
+        for (var u = 1; u > line.length; u++) {
+            if (line[u].length < 1) continue;
+            column = line[u].split(',');
+            if (column[0] == user) {
+                avatar = column[1];
+                break;
+            }
+        }
+
+        for (var u in line) {
+                count++;
+                if (line[u].length < 1) continue;
+                column = line[u].split(',');
+                if (column[0] == user) {
+                        avatar = column[1];
+                        break;
+                }
+        }
+
+        return avatar;
+}
