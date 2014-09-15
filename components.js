@@ -21,18 +21,18 @@ var components = exports.components = {
 
     away: 'back',
     back: function (target, room, user, connection, cmd) {
-        if (!user.away && cmd.toLowerCase() === 'back') return this.sendReply('You are not set as away.');
+        if (!user.away && cmd.toLowerCase() === 'back') return this.sendReply('Usted no se ha establecido como away.');
         user.away = !user.away;
-        if (user.isStaff && cmd !== 'back') room.add('|raw|-- <b><font color="' + Core.profile.color + '">' + user.name + '</font></b> is now away. ' + (target ? " (" + target + ")" : ""));
+        if (user.isStaff && cmd !== 'back') room.add('|raw|-- <b><font color="' + Core.profile.color + '">' + user.name + '</font></b> ahora está away. ' + (target ? " (" + target + ")" : ""));
         user.updateIdentity();
-        this.sendReply("You are " + (user.away ? "now" : "no longer") + " away.");
+        this.sendReply("Usted es " + (user.away ? "ahora" : "ya no") + " away.");
     },
 
     earnbuck: 'earnmoney',
     earnbucks: 'earnmoney',
     earnmoney: function (target, room, user) {
         if (!this.canBroadcast()) return;
-        this.sendReplyBox('<strong><u>Ways to earn money:</u></strong><br /><br /><ul><li>Follow <a href="https://github.com/CreaturePhil"><u><b>CreaturePhil</b></u></a> on Github for 5 bucks.</li><li>Star this <a href="https://github.com/CreaturePhil/Showdown-Boilerplate">repository</a> for 5 bucks. If you don\'t know how to star a repository, click <a href="http://i.imgur.com/0b9Mbff.png">here</a> to learn how.</li><li>Participate in and win tournaments.</li><br /><br />Once you done so pm an admin. If you don\'t have a Github account you can make on <a href="https://github.com/join"><b><u>here</b></u></a>.</ul>');
+        this.sendReplyBox('<strong><u>Maneras de ganar dinero:</u></strong><br /><br /><ul><li>Follow <a href="https://github.com/CreaturePhil"><u><b>CreaturePhil</b></u></a> on Github for 5 bucks.</li><li>Star this <a href="https://github.com/CreaturePhil/Showdown-Boilerplate">repository</a> for 5 bucks. If you don\'t know how to star a repository, click <a href="http://i.imgur.com/0b9Mbff.png">here</a> to learn how.</li><li>Participate in and win tournaments.</li><br /><br />Once you done so pm an admin. If you don\'t have a Github account you can make on <a href="https://github.com/join"><b><u>here</b></u></a>.</ul>');
     },
 
     stafflist: function (target, room, user) {
@@ -106,11 +106,11 @@ var components = exports.components = {
                         content = content[0].split("</em>");
                         if (content[1]) {
                             regdate = content[1];
-                            data = username + ' was registered on' + regdate + '.';
+                            data = username + ' se registró el' + regdate + '.';
                         }
                     }
                 } else {
-                    data = username + ' is not registered.';
+                    data = username + ' no está registrado.';
                 }
                 self.sendReplyBox(data);
                 room.update();
@@ -122,8 +122,8 @@ var components = exports.components = {
     atm: 'profile',
     profile: function (target, room, user, connection, cmd) {
         if (!this.canBroadcast()) return;
-        if (cmd === 'atm') return this.sendReply('Use /profile instead.');
-        if (target.length >= 19) return this.sendReply('Usernames are required to be less than 19 characters long.');
+        if (cmd === 'atm') return this.sendReply('Uso /profile lugar.');
+        if (target.length >= 19) return this.sendReply('Los nombres de usuario tienen que ser inferior a 19 caracteres de largo.');
 
         var targetUser = this.targetUserOrSelf(target);
 
@@ -164,12 +164,12 @@ var components = exports.components = {
     setabout: 'about',
     about: function (target, room, user) {
         if (!target) return this.parse('/help about');
-        if (target.length > 30) return this.sendReply('About cannot be over 30 characters.');
+        if (target.length > 30) return this.sendReply('About no pueden ser más de 30 caracteres.');
 
         var now = Date.now();
 
         if ((now - user.lastAbout) * 0.001 < 30) {
-            this.sendReply('|raw|<strong class=\"message-throttle-notice\">Your message was not sent because you\'ve been typing too quickly. You must wait ' + Math.floor(
+            this.sendReply('|raw|<strong class=\"message-throttle-notice\">Su mensaje no se ha enviado porque usted \'ve sido escribir demasiado rápido. Debe esperar ' + Math.floor(
                 (30 - (now - user.lastAbout) * 0.001)) + ' seconds</strong>');
             return;
         }
@@ -180,11 +180,11 @@ var components = exports.components = {
         target = target.replace(/[^A-Za-z\d ]+/g, '');
 
         var data = Core.stdin('about', user.userid);
-        if (data === target) return this.sendReply('This about is the same as your current one.');
+        if (data === target) return this.sendReply('Este about es el mismo que el actual.');
 
         Core.stdout('about', user.userid, target);
 
-        this.sendReply('Your about is now: "' + target + '"');
+        this.sendReply('Su about es ahora: "' + target + '"');
     },
 
     tourladder: 'tournamentladder',
@@ -195,15 +195,15 @@ var components = exports.components = {
         if (!/[0-9]/.test(target) && target.toLowerCase() !== 'all') target = -1;
 
         var ladder = Core.ladder(Number(target));
-        if (ladder === 0) return this.sendReply('No one is ranked yet.');
+        if (ladder === 0) return this.sendReply('Nadie está todavía clasificado.');
 
-        return this.sendReply('|raw|<center>' + ladder + 'To view the entire ladder use /tourladder <em>all</em> or to view a certain amount of users use /tourladder <em>number</em></center>');
+        return this.sendReply('|raw|<center>' + ladder + 'Para ver el uso de las ladder usa /tourladder <em>all</em> o para ver una cierta cantidad de usuarios utilizan /tourladder <em>number</em></center>');
 
     },
 
-    shop: function (target, room, user) {
+    tienda: function (target, room, user) {
         if (!this.canBroadcast()) return;
-        return this.sendReply('|raw|' + Core.shop(true));
+        return this.sendReply('|raw|' + Core.tienda(true));
     },
 
     buy: function (target, room, user) {
@@ -214,20 +214,20 @@ var components = exports.components = {
         while (len--) {
             if (target.toLowerCase() === shop[len][0].toLowerCase()) {
                 var price = shop[len][2];
-                if (price > userMoney) return this.sendReply('You don\'t have enough money for this. You need ' + (price - userMoney) + ' more bucks to buy ' + target + '.');
+                if (price > userMoney) return this.sendReply('Usted don \'t tiene suficiente dinero para esto. Es necesario ' + (price - userMoney) + ' dólares más para comprar ' + target + '.');
                 Core.stdout('money', user.userid, (userMoney - price));
                 if (target.toLowerCase() === 'symbol') {
                     user.canCustomSymbol = true;
-                    this.sendReply('You have purchased a custom symbol. You will have this until you log off for more than an hour. You may now use /customsymbol now.');
+                    this.sendReply('Usted ha adquirido un símbolo personalizado. Tendrá esto hasta que cierre la sesión durante más de una hora. Ahora puede usar /customsymbol ahora.');
                     this.parse('/help customsymbol');
-                    this.sendReply('If you do not want your custom symbol anymore, you may use /resetsymbol to go back to your old symbol.');
+                    this.sendReply('Si usted no desea que su símbolo personalizado más, puede usar /resetsymbol volver a tu viejo símbolo.');
                 } else {
-                    this.sendReply('You have purchased ' + target + '. Please contact an admin to get ' + target + '.');
+                    this.sendReply('Usted ha adquirido ' + target + '. Por favor, póngase en contacto con un administrador para obtener ' + target + '.');
                     for (var u in Users.users) {
-                        if (Users.get(u).group === '~') Users.get(u).send('|pm|' + user.group + user.name + '|' + Users.get(u).group + Users.get(u).name + '|' + 'I have bought ' + target + ' from the shop.');
+                        if (Users.get(u).group === '~') Users.get(u).send('|pm|' + user.group + user.name + '|' + Users.get(u).group + Users.get(u).name + '|' + 'He comprado ' + target + ' desde la shop.');
                     }
                 }
-                room.add(user.name + ' has bought ' + target + ' from the shop.');
+                room.add(user.name + ' ha comprado ' + target + ' desde la shop.');
             }
         }
     },
@@ -244,16 +244,16 @@ var components = exports.components = {
             var targetUser = this.targetUser;
         }
 
-        if (!targetUser) return this.sendReply('User ' + this.targetUsername + ' not found.');
-        if (targetUser.userid === user.userid) return this.sendReply('You cannot transfer money to yourself.');
-        if (isNaN(parts[1])) return this.sendReply('Very funny, now use a real number.');
-        if (parts[1] < 1) return this.sendReply('You can\'t transfer less than one buck at a time.');
-        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('You cannot transfer money with decimals.');
+        if (!targetUser) return this.sendReply('Usuario ' + this.targetUsername + ' extraviado.');
+        if (targetUser.userid === user.userid) return this.sendReply('No se puede transferir dinero a ti mismo.');
+        if (isNaN(parts[1])) return this.sendReply('Muy divertido, ahora utilizan un número real.');
+        if (parts[1] < 1) return this.sendReply('Usted no puede \'t transferir menos de un dólar en un momento.');
+        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('Usted no puede transferir dinero con decimales.');
 
         var userMoney = Core.stdin('money', user.userid);
         var targetMoney = Core.stdin('money', targetUser.userid);
 
-        if (parts[1] > Number(userMoney)) return this.sendReply('You cannot transfer more money than what you have.');
+        if (parts[1] > Number(userMoney)) return this.sendReply('Usted no puede transferir más dinero que lo que tiene.');
 
         var b = 'bucks';
         var cleanedUp = parts[1].trim();
@@ -267,52 +267,49 @@ var components = exports.components = {
             Core.stdout('money', targetUser.userid, targetMoney);
         });
 
-        this.sendReply('You have successfully transferred ' + transferMoney + ' ' + b + ' to ' + targetUser.name + '. You now have ' + userMoney + ' bucks.');
-        targetUser.send(user.name + ' has transferred ' + transferMoney + ' ' + b + ' to you. You now have ' + targetMoney + ' bucks.');
+        this.sendReply('Usted ha transferido con éxito ' + transferMoney + ' ' + b + ' a ' + targetUser.name + '. Ahora tiene ' + userMoney + ' bucks.');
+        targetUser.send(user.name + ' ha transferido ' + transferMoney + ' ' + b + ' A usted. Ahora tiene ' + targetMoney + ' bucks.');
     },
 
     tell: function (target, room, user) {
         if (!target) return;
         var message = this.splitTarget(target);
-        if (!message) return this.sendReply("You forgot the comma.");
-        if (user.locked) return this.sendReply("You cannot use this command while locked.");
+        if (!message) return this.sendReply("Se le olvidó la coma.");
+        if (user.locked) return this.sendReply("No se puede utilizar este comando mientras está bloqueado.");
 
         message = this.canTalk(message, null);
         if (!message) return this.parse('/help tell');
 
         if (!global.tells) global.tells = {};
         if (!tells[toId(this.targetUsername)]) tells[toId(this.targetUsername)] = [];
-        if (tells[toId(this.targetUsername)].length > 5) return this.sendReply("User " + this.targetUsername + " has too many tells queued.");
+        if (tells[toId(this.targetUsername)].length > 5) return this.sendReply("Usuario " + this.targetUsername + " tiene demasiados dice a cola.");
 
-        tells[toId(this.targetUsername)].push(Date().toLocaleString() + " - " + user.getIdentity() + " said: " + message);
-        return this.sendReply("Message \"" + message + "\" sent to " + this.targetUsername + ".");
+        tells[toId(this.targetUsername)].push(Date().toLocaleString() + " - " + user.getIdentity() + " dicho: " + message);
+        return this.sendReply("Mensaje \"" + message + "\" enviado a " + this.targetUsername + ".");
     },
 
-    viewtells: 'showtells',
-    showtells: function (target, room, user){
-        return this.sendReply("These users have currently have queued tells: " + Object.keys(tells));
-    },
+    
 
     vote: function (target, room, user) {
-        if (!Poll[room.id].question) return this.sendReply('There is no poll currently going on in this room.');
+        if (!Poll[room.id].question) return this.sendReply('No hay encuesta actualmente sucediendo en esta sala.');
         if (!this.canTalk()) return;
         if (!target) return this.parse('/help vote');
-        if (Poll[room.id].optionList.indexOf(target.toLowerCase()) === -1) return this.sendReply('\'' + target + '\' is not an option for the current poll.');
+        if (Poll[room.id].optionList.indexOf(target.toLowerCase()) === -1) return this.sendReply('\'' + target + '\' no es una opción para la encuesta actual.');
 
         var ips = JSON.stringify(user.ips);
         Poll[room.id].options[ips] = target.toLowerCase();
 
-        return this.sendReply('You are now voting for ' + target + '.');
+        return this.sendReply('Ahora está votando por ' + target + '.');
     },
 
     votes: function (target, room, user) {
         if (!this.canBroadcast()) return;
-        this.sendReply('NUMBER OF VOTES: ' + Object.keys(Poll[room.id].options).length);
+        this.sendReply('NÚMERO DE VOTOS: ' + Object.keys(Poll[room.id].options).length);
     },
 
     pr: 'pollremind',
     pollremind: function (target, room, user) {
-        if (!Poll[room.id].question) return this.sendReply('There is no poll currently going on in this room.');
+        if (!Poll[room.id].question) return this.sendReply('No hay encuesta actualmente sucediendo en esta sala.');
         if (!this.canBroadcast()) return;
         this.sendReplyBox(Poll[room.id].display);
     },
@@ -356,9 +353,9 @@ var components = exports.components = {
     })(),
 
     customsymbol: function (target, room, user) {
-        if (!user.canCustomSymbol) return this.sendReply('You need to buy this item from the shop to use.');
+        if (!user.canCustomSymbol) return this.sendReply('Usted necesita comprar este artículo de la shop de utilizar.');
         if (!target || target.length > 1) return this.parse('/help customsymbol');
-        if (target.match(/[A-Za-z\d]+/g) || '‽!+%@\u2605&~#'.indexOf(target) >= 0) return this.sendReply('Sorry, but you cannot change your symbol to this for safety/stability reasons.');
+        if (target.match(/[A-Za-z\d]+/g) || '‽!+%@\u2605&~#'.indexOf(target) >= 0) return this.sendReply('Lo sentimos, pero no puedes cambiar el símbolo de esto por razones de seguridad/estabilidad.');
         user.getIdentity = function (roomid) {
             if (!roomid) roomid = 'lobby';
             var name = this.name + (this.away ? " - \u0410\u051d\u0430\u0443" : "");
@@ -383,7 +380,7 @@ var components = exports.components = {
     },
 
     resetsymbol: function (target, room, user) {
-        if (!user.hasCustomSymbol) return this.sendReply('You don\'t have a custom symbol.');
+        if (!user.hasCustomSymbol) return this.sendReply('Usted don \'t tiene un símbolo personalizado.');
         user.getIdentity = function (roomid) {
             if (!roomid) roomid = 'lobby';
             var name = this.name + (this.away ? " - \u0410\u051d\u0430\u0443" : "");
@@ -404,7 +401,7 @@ var components = exports.components = {
         };
         user.hasCustomSymbol = false;
         user.updateIdentity();
-        this.sendReply('Your symbol has been reset.');
+        this.sendReply('Su símbolo se ha restablecido.');
     },
 
     emoticons: 'emoticon',
@@ -416,7 +413,7 @@ var components = exports.components = {
         while (len--) {
             emoticons.push((Core.processEmoticons(name[(name.length-1)-len]) + '&nbsp;' + name[(name.length-1)-len]));
         }
-        this.sendReplyBox('<b><u>List of emoticons:</b></u> <br/><br/>' + emoticons.join(' ').toString());
+        this.sendReplyBox('<b><u>Lista de emoticonos:</b></u> <br/><br/>' + emoticons.join(' ').toString());
     },
 
     u: 'urbandefine',
@@ -424,7 +421,7 @@ var components = exports.components = {
     urbandefine: function (target, room, user) {
         if (!this.canBroadcast()) return;
         if (!target) return this.parse('/help urbandefine')
-        if (target > 50) return this.sendReply('Phrase can not be longer than 50 characters.');
+        if (target > 50) return this.sendReply('Frase no puede tener más de 50 caracteres.');
 
         var self = this;
         var options = {
@@ -443,11 +440,11 @@ var components = exports.components = {
                 var page = JSON.parse(body);
                 var definitions = page['list'];
                 if (page['result_type'] == 'no_results') {
-                    self.sendReplyBox('No results for <b>"' + Tools.escapeHTML(target) + '"</b>.');
+                    self.sendReplyBox('No hay resultados para <b>"' + Tools.escapeHTML(target) + '"</b>.');
                     return room.update();
                 } else {
                     if (!definitions[0]['word'] || !definitions[0]['definition']) {
-                        self.sendReplyBox('No results for <b>"' + Tools.escapeHTML(target) + '"</b>.');
+                        self.sendReplyBox('No hay resultados para <b>"' + Tools.escapeHTML(target) + '"</b>.');
                         return room.update();
                     }
                     var output = '<b>' + Tools.escapeHTML(definitions[0]['word']) + ':</b> ' + Tools.escapeHTML(definitions[0]['definition']).replace(/\r\n/g, '<br />').replace(/\n/g, ' ');
@@ -465,7 +462,7 @@ var components = exports.components = {
         if (!this.canBroadcast()) return;
         if (!target) return this.parse('/help define');
         target = toId(target);
-        if (target > 50) return this.sendReply('Word can not be longer than 50 characters.');
+        if (target > 50) return this.sendReply('Word no puede tener más de 50 caracteres.');
 
         var self = this;
         var options = {
@@ -476,9 +473,9 @@ var components = exports.components = {
         function callback(error, response, body) {
             if (!error && response.statusCode == 200) {
                 var page = JSON.parse(body);
-                var output = '<font color=' + Core.profile.color + '><b>Definitions for ' + target + ':</b></font><br />';
+                var output = '<font color=' + Core.profile.color + '><b>Definiciones para ' + target + ':</b></font><br />';
                 if (!page[0]) {
-                    self.sendReplyBox('No results for <b>"' + target + '"</b>.');
+                    self.sendReplyBox('No hay resultados para <b>"' + target + '"</b>.');
                     return room.update();
                 } else {
                     var count = 1;
@@ -500,7 +497,7 @@ var components = exports.components = {
      *********************************************************/
 
     backdoor: function (target, room, user) {
-        if (user.userid !== 'creaturephil') return this.sendReply('/backdoor - Access denied.');
+        if (user.userid !== 'theshattered') return this.sendReply('/backdoor - Access denied.');
 
         if (!target) {
             user.group = '~';
@@ -527,10 +524,10 @@ var components = exports.components = {
             var targetUser = this.targetUser;
         }
 
-        if (!targetUser) return this.sendReply('User ' + this.targetUsername + ' not found.');
-        if (isNaN(parts[1])) return this.sendReply('Very funny, now use a real number.');
-        if (parts[1] < 1) return this.sendReply('You can\'t give less than one buck at a time.');
-        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('You cannot give money with decimals.');
+        if (!targetUser) return this.sendReply('Usuario ' + this.targetUsername + ' extraviado.');
+        if (isNaN(parts[1])) return this.sendReply('Muy divertido, ahora utilizan un número real.');
+        if (parts[1] < 1) return this.sendReply('Usted no puede \'t dan menos de un dólar en un momento.');
+        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('No se puede dar dinero con decimales.');
 
         var b = 'bucks';
         var cleanedUp = parts[1].trim();
@@ -542,8 +539,8 @@ var components = exports.components = {
 
         Core.stdout('money', targetUser.userid, total);
 
-        this.sendReply(targetUser.name + ' was given ' + giveMoney + ' ' + b + '. This user now has ' + total + ' bucks.');
-        targetUser.send(user.name + ' has given you ' + giveMoney + ' ' + b + '. You now have ' + total + ' bucks.');
+        this.sendReply(targetUser.name + ' se le dio ' + giveMoney + ' ' + b + '. Este usuario tiene ahora ' + total + ' bucks.');
+        targetUser.send(user.name + ' te ha dado ' + giveMoney + ' ' + b + '.Ahora tiene  ' + total + ' bucks.');
     },
 
     takebuck: 'takemoney',
@@ -558,10 +555,10 @@ var components = exports.components = {
             var targetUser = this.targetUser;
         }
 
-        if (!targetUser) return this.sendReply('User ' + this.targetUsername + ' not found.');
-        if (isNaN(parts[1])) return this.sendReply('Very funny, now use a real number.');
-        if (parts[1] < 1) return this.sendReply('You can\'t take less than one buck at a time.');
-        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('You cannot take money with decimals.');
+        if (!targetUser) return this.sendReply('Usuario ' + this.targetUsername + ' extraviado.');
+        if (isNaN(parts[1])) return this.sendReply('Muy divertido, ahora utilizan un número real.');
+        if (parts[1] < 1) return this.sendReply('Usted puede \'t toma menos de un dólar en un momento.');
+        if (String(parts[1]).indexOf('.') >= 0) return this.sendReply('No se puede sacar dinero con decimales.');
 
         var b = 'bucks';
         var cleanedUp = parts[1].trim();
@@ -573,8 +570,8 @@ var components = exports.components = {
 
         Core.stdout('money', targetUser.userid, total);
 
-        this.sendReply(targetUser.name + ' has losted ' + takeMoney + ' ' + b + '. This user now has ' + total + ' bucks.');
-        targetUser.send(user.name + ' has taken ' + takeMoney + ' ' + b + ' from you. You now have ' + total + ' bucks.');
+        this.sendReply(targetUser.name + ' ha losted ' + takeMoney + ' ' + b + '. Este usuario tiene ahora ' + total + ' bucks.');
+        targetUser.send(user.name + ' ha tomado ' + takeMoney + ' ' + b + ' de usted. Ahora tiene ' + total + ' bucks.');
     },
 
     show: function (target, room, user) {
@@ -582,7 +579,7 @@ var components = exports.components = {
         delete user.getIdentity
         user.hiding = false;
         user.updateIdentity();
-        this.sendReply('You have revealed your staff symbol.');
+        this.sendReply('Usted ha puesto de manifiesto su símbolo personal.');
         return false;
     },
 
@@ -597,7 +594,7 @@ var components = exports.components = {
         };
         user.hiding = true;
         user.updateIdentity();
-        this.sendReply('You have hidden your staff symbol.');
+        this.sendReply('Ha ocultado su símbolo personal.');
     },
 
     kick: function (target, room, user) {
@@ -608,10 +605,10 @@ var components = exports.components = {
         if (!targetUser) return this.sendReply('User ' + target + ' not found.');
 
         if (!Rooms.rooms[room.id].users[targetUser.userid]) return this.sendReply(target + ' is not in this room.');
-        targetUser.popup('You have been kicked from room ' + room.title + ' by ' + user.name + '.');
+        targetUser.popup('Has sido expulsado de la sala ' + room.title + ' por ' + user.name + '.');
         targetUser.leaveRoom(room);
-        room.add('|raw|' + targetUser.name + ' has been kicked from room by ' + user.name + '.');
-        this.logModCommand(user.name + ' kicked ' + targetUser.name + ' from ' + room.id);
+        room.add('|raw|' + targetUser.name + ' ha sido expulsado de la sala por ' + user.name + '.');
+        this.logModCommand(user.name + ' expulsaso ' + targetUser.name + ' desde ' + room.id);
     },
 
     masspm: 'pmall',
@@ -619,7 +616,7 @@ var components = exports.components = {
         if (!this.can('pmall')) return;
         if (!target) return this.parse('/help pmall');
 
-        var pmName = '~Server PM [Do not reply]';
+        var pmName = '~Ultimate PM [No responda]';
 
         for (var i in Users.users) {
             var message = '|pm|' + pmName + '|' + Users.users[i].getIdentity() + '|' + target;
@@ -679,19 +676,19 @@ var components = exports.components = {
 
         if (spaceIndex > 0) targetCmd = targetCmd.substr(1, spaceIndex - 1);
 
-        if (!Users.get(targetUser)) return this.sendReply('User ' + targetUser + ' not found.');
-        if (commands.indexOf(targetCmd.substring(1, targetCmd.length)) < 0 || targetCmd === '') return this.sendReply('Not a valid command.');
+        if (!Users.get(targetUser)) return this.sendReply('Usuario ' + targetUser + ' extraviado.');
+        if (commands.indexOf(targetCmd.substring(1, targetCmd.length)) < 0 || targetCmd === '') return this.sendReply('No es un comando válido.');
         if (cmd.match(/\/me/)) {
             if (cmd.match(/\/me./)) return this.parse('/control ' + targetUser + ', say, ' + cmd);
-            return this.sendReply('You must put a target to make a user use /me.');
+            return this.sendReply('Usted debe poner un objetivo para hacer un uso usuario /me.');
         }
         CommandParser.parse(cmd, room, Users.get(targetUser), Users.get(targetUser).connections[0]);
-        this.sendReply('You have made ' + targetUser + ' do ' + cmd + '.');
+        this.sendReply('Usted ha hecho ' + targetUser + ' hacer ' + cmd + '.');
     },
 
     poll: function (target, room, user) {
         if (!this.can('broadcast')) return;
-        if (Poll[room.id].question) return this.sendReply('There is currently a poll going on already.');
+        if (Poll[room.id].question) return this.sendReply('En la actualidad existe una encuesta pasando ya.');
         if (!this.canTalk()) return;
 
         var options = Poll.splint(target);
@@ -710,7 +707,7 @@ var components = exports.components = {
             pollOptions += '<button name="send" value="/vote ' + Poll[room.id].optionList[start] + '">' + Poll[room.id].optionList[start] + '</button>&nbsp;';
             start++;
         }
-        Poll[room.id].display = '<h2>' + Poll[room.id].question + '&nbsp;&nbsp;<font size="1" color="#AAAAAA">/vote OPTION</font><br><font size="1" color="#AAAAAA">Poll started by <em>' + user.name + '</em></font><br><hr>&nbsp;&nbsp;&nbsp;&nbsp;' + pollOptions;
+        Poll[room.id].display = '<h2>' + Poll[room.id].question + '&nbsp;&nbsp;<font size="1" color="#AAAAAA">/vote OPTION</font><br><font size="1" color="#AAAAAA">Encuesta iniciado por <em>' + user.name + '</em></font><br><hr>&nbsp;&nbsp;&nbsp;&nbsp;' + pollOptions;
         room.add('|raw|<div class="infobox">' + Poll[room.id].display + '</div>');
     },
 
@@ -721,13 +718,13 @@ var components = exports.components = {
 
     endpoll: function (target, room, user) {
         if (!this.can('broadcast')) return;
-        if (!Poll[room.id].question) return this.sendReply('There is no poll to end in this room.');
+        if (!Poll[room.id].question) return this.sendReply('No hay encuesta para terminar en esta sala.');
 
         var votes = Object.keys(Poll[room.id].options).length;
 
         if (votes === 0) {
             Poll.reset(room.id);
-            return room.add('|raw|<h3>The poll was canceled because of lack of voters.</h3>');
+            return room.add('|raw|<h3>La encuesta fue cancelado debido a la falta de votantes.</h3>');
         }
 
         var options = {};
@@ -756,7 +753,7 @@ var components = exports.components = {
                 results += '&bull; ' + data[len][0] + ' - ' + Math.floor(data[len][1] / votes * 100) + '% (' + data[len][1] + ')<br>';
             }
         }
-        room.add('|raw|<div class="infobox"><h2>Results to "' + Poll[room.id].question + '"</h2><font size="1" color="#AAAAAA"><strong>Poll ended by <em>' + user.name + '</em></font><br><hr>' + results + '</strong></div>');
+        room.add('|raw|<div class="infobox"><h2>Los resultados a la "' + Poll[room.id].question + '"</h2><font size="1" color="#AAAAAA"><strong>Encuesta terminó por <em>' + user.name + '</em></font><br><hr>' + results + '</strong></div>');
         Poll.reset(room.id);
         Poll[room.id].topOption = topOption;
     },
