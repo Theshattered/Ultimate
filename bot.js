@@ -9,6 +9,26 @@
  * @license MIT license
  */
 
+const botBannedWordsDataFile = './config/botbannedwords.json';
+const botBannedUsersDataFile = './config/botbannedusers.json';
+var fs = require('fs');
+
+if (!fs.existsSync(botBannedWordsDataFile))
+	fs.writeFileSync(botBannedWordsDataFile, '{}');
+	
+if (!fs.existsSync(botBannedUsersDataFile))
+	fs.writeFileSync(botBannedUsersDataFile, '{}');
+	
+var botBannedWords = JSON.parse(fs.readFileSync(botBannedWordsDataFile).toString());
+var botBannedUsers = JSON.parse(fs.readFileSync(botBannedUsersDataFile).toString());
+exports.botBannedWords = botBannedWords;
+exports.botBannedUsers = botBannedUsers;
+
+function writeBotData() {
+	fs.writeFileSync(botBannedWordsDataFile, JSON.stringify(botBannedWords));
+	fs.writeFileSync(botBannedUsersDataFile, JSON.stringify(botBannedUsers));
+} 
+ 
 var config = {
     name: 'Ultimate Bot',
     userid: function () {
@@ -304,6 +324,126 @@ var commands = {
         this.sendReply('Message sent to ' + parts[0] + '.');
     },
 
+
+	
+hotpatch: function (target, room, user) {
+		if (!this.can('hotpatch')) return;
+		Bot = require('./bot.js');
+		this.sendReply('Código del Bot actualizado.');
+	},
+	
+	reset: function (target, room, user) {
+		if (!this.can('hotpatch')) return;
+		parse.chatData = {};
+		this.sendReply('Datos de chat reiniciados.');
+	},
+
+	ab: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		if (!target) return;
+		var parts = target.split(',');
+		var userId;
+		var bannedList = '';
+		for (var n in parts) {
+			userId = toId(parts[n]);
+			if (botBannedUsers[userId]) {
+			 this.sendPm('En usuario "' + userId + '" ya estaba en la lista negra.');
+			 continue;
+			}
+			bannedList += '"' + userId + '", ';
+			botBannedUsers[userId] = 1;
+		}
+		writeBotData();
+		if (parts.length > 1) {
+			this.sendReply('Los usuarios ' + bannedList + ' se han añadido a la lista negra correctamente.');
+		} else {
+			this.sendReply('El usuario "' + toId(target) + '" se ha añadido a la lista negra correctamente.');
+		}
+	},
+
+	unab: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		if (!target) return;
+		var parts = target.split(',');
+		var userId;
+		var bannedList = '';
+		for (var n in parts) {
+			userId = toId(parts[n]);
+			if (!botBannedUsers[userId]) {
+			 this.sendPm('En usuario "' + userId + '" no estaba en la lista negra.');
+			 continue;
+			}
+			bannedList += '"' + userId + '", ';
+			delete botBannedUsers[userId];
+		}
+		writeBotData();
+		if (parts.length > 1) {
+			this.sendReply('Los usuarios ' + bannedList + ' han sido eliminados de la lista negra.');
+		} else {
+			this.sendReply('El usuario "' + toId(target) + '" ha sido eliminado de la lista negra.');
+		}
+	},
+
+	vab: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		var bannedList = '';
+		for (var d in botBannedUsers) {
+			bannedList += d + ', ';
+		}
+		if (bannedList === '') return this.sendPm('Lista negra vacía.');
+		this.sendPm('Usuarios de la Lista negra: ' + bannedList);
+	},
+
+	banword: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		if (!target) return;
+		var word = target.toLowerCase();
+		var wordId = toId(word);
+		if (!wordId || wordId === '') {
+			if (!botBannedWords) {
+				wordId = 0;
+			} else {
+				wordId = Object.keys(botBannedWords).length;
+			}
+		}
+		if (botBannedWords[wordId]) {
+			this.sendPm('La frase "' + target + '" ya estaba prohibida.');
+			return;
+		}
+		botBannedWords[toId(wordId)] = word;
+		writeBotData();
+		this.sendReply('La frase "' + target + '" está prohibida a partir de ahora.');
+	},
+	
+	unbanword: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		if (!target) return;
+		var wordId = target.toLowerCase();
+		for (var d in botBannedWords) {
+			if(botBannedWords[d] === wordId) {
+				wordId = d;
+				break;
+			}
+		}
+		if (!botBannedWords[toId(wordId)]) {
+			this.sendPm('La frase "' + target + '" no estaba prohibida.');
+			return;
+		}
+		delete botBannedWords[toId(wordId)];
+		writeBotData();
+		this.sendReply('La frase "' + target + '" ha dejado de estar prohibida.');
+	},
+	
+	vbw: function (target, room, user) {
+		if (!this.can('rangeban')) return;
+		var bannedWordsList = '';
+		for (var d in botBannedWords) {
+			bannedWordsList += botBannedWords[d] + ', ';
+		}
+		if (bannedWordsList === '') return this.sendPm('No hay ninguna frase prohibida.');
+		this.sendPm('Frases Prohibidas en Ultimate: ' + bannedWordsList);
+	},	
+	
     penislength: function (target, room, user) {
         this.sendReply('8.5 inches from the base. Perv.');
     },
